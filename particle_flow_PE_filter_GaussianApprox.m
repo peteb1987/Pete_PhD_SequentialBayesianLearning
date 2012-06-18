@@ -37,6 +37,32 @@ for kk = 1:K
     
     %%% Particle flow it to the posterior %%%
     
+    % Some dubious outlier exclusion
+    oll = zeros(Np, 1);
+%     oll(x_pts > 3*std(x_pts)) = 1;
+%     oll(tau_pts > 3*std(tau_pts)) = 1;
+%     oll(alpha_pts > 3*std(alpha_pts)) = 1;
+%     oll(x_pts > 5*std(x_pts(x_pts<quantile(x_pts, 0.95)))) = 1;
+%     oll(tau_pts > 5*std(tau_pts(tau_pts<quantile(tau_pts, 0.95)))) = 1;
+%     oll(alpha_pts > 5*std(alpha_pts(alpha_pts<quantile(alpha_pts, 0.95)))) = 1;
+    oll(abs(x_pts)>10) = 1;
+    oll(abs(tau_pts)>10) = 1;
+    oll(abs(alpha_pts)>10) = 1;
+    
+    % Find Gaussian mean and covariance of the predicted distribution
+    m = mean([x_pts(~oll), tau_pts(~oll), alpha_pts(~oll)])';
+    P = cov([x_pts(~oll), tau_pts(~oll), alpha_pts(~oll)]);
+%     m = mean([x_pts, tau_pts, alpha_pts])';
+%     P = cov([x_pts, tau_pts, alpha_pts]);
+    
+    outlier = find(oll);
+    for jj = 1:sum(oll)
+        x = mvnrnd(m, P);
+        x_pts(outlier(jj)) = x(1);
+        tau_pts(outlier(jj)) = x(2);
+        alpha_pts(outlier(jj)) = x(3);
+    end
+    
     H = [1 0 0]; R = params.obs_var;
     y = observs(1,kk);
     

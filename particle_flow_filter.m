@@ -30,22 +30,24 @@ for kk = 1:K
     %%% Particle flow it to the posterior %%%
     
     % Find Gaussian mean and covariance of the predicted distribution
-    m = mean(pts);
-    P = var(pts);
+%     m = mean(pts);
+%     P = var(pts);
     
     H = 1; R = params.obs_var;
     y = observs(1,kk);
+    Q = params.proc_var;
     
     % Loop through particles
     for ii = 1:Np
         
         x = pts(ii,1);
+        m = params.decay * last_pts(ii,1);
         
         dl = params.dl;
         for ll = 0:dl:1
             
-            A = -0.5*P*H'*((R+ll*H*P*H')\H);
-            b = (1+2*ll*A)*((1+ll*A)*P*H'*(R\y)+A*m);
+            A = -0.5*Q*H'*((R+ll*H*Q*H')\H);
+            b = (1+2*ll*A)*((1+ll*A)*Q*H'*(R\y)+A*m);
             x = x + dl*(A*x+b);
             
         end
